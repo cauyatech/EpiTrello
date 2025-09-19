@@ -5,7 +5,6 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
@@ -46,9 +45,8 @@ export default function SignInPage() {
       <Button onClick={signInEmail} disabled={loading}>Sign in with Email</Button>
       <Button variant="secondary" onClick={signInGoogle} disabled={loading}>Sign in with Google</Button>
       <p className="text-sm text-neutral-400">
-        No account? Use Google, or create one in Firebase console (Email/Password sign-up).
+        No account? <a href="/register" className="underline">Create your here</a>.
       </p>
-      <Link className="text-sm underline" href="/boards">Go to boards</Link>
     </main>
   );
 }
