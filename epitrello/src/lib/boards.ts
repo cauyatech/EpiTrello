@@ -3,7 +3,6 @@ import {
   collection, addDoc, getDocs, query, where, serverTimestamp,
   updateDoc, deleteDoc, doc, orderBy
 } from "firebase/firestore";
-import { DEFAULT_RUNTIME_WEBPACK } from "next/dist/shared/lib/constants";
 
 export type Board = {
   id: string;
