@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 export default function BoardsPage() {
   const [uid, setUid] = useState<string | null>(null);
@@ -95,7 +96,9 @@ export default function BoardsPage() {
           {boards.map(b => (
             <Card key={b.id} className="p-3">
               <CardHeader className="p-0 flex flex-row items-center justify-between">
-                <CardTitle className="text-base">{b.title}</CardTitle>
+                <Link href={`/b/${b.id}`} className="text-base font-medium hover:underline">
+                  {b.title}
+                </Link>
                 <div className="flex gap-2">
                   <Button size="sm" variant="secondary" onClick={() => handleRename(b.id)}>Rename</Button>
                   <Button size="sm" variant="destructive" onClick={() => handleDelete(b.id)}>Delete</Button>
