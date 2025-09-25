@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import UserBadge from "@/components/user-badge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,9 +28,8 @@ export default function RootLayout({
     <html lang="fr">
       <body className="min-h-screen bg-neutral-950 text-neutral-100">
         <div className="max-w-6xl mx-auto p-4">{children}</div>
-        <Toaster/>
+        <UserBadge/>
       </body>
     </html>
   );
 }
-
