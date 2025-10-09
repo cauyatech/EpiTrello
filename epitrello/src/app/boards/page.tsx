@@ -1,58 +1,65 @@
 "use client";
 
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useEffect, useState } from "react";
-import { Board, listBoards, createBoard, renameBoard, deleteBoard } from "@/lib/boards";
+import { useState } from "react";
+import { createBoard, renameBoard, deleteBoard } from "@/lib/boards";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeBoards } from "@/hooks/useRealtimeBoards";
+import { toast } from "sonner";
 import Link from "next/link";
 
 export default function BoardsPage() {
-  const [uid, setUid] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [boards, setBoards] = useState<Board[]>([]);
+  const { user, loading: authLoading } = useAuth("/signin");
+  const { boards, loading: boardsLoading, error } = useRealtimeBoards(user?.uid || null);
   const [newTitle, setNewTitle] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) {
-        window.location.href = "/signin";
-        return;
-      }
-      setUid(u.uid);
-      await reload(u.uid);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
-  async function reload(u: string) {
-    const data = await listBoards(u);
-    setBoards(data);
-  }
+  const loading = authLoading || boardsLoading;
 
   async function handleCreate() {
-    if (!uid || !newTitle.trim()) return;
-    await createBoard(uid, newTitle.trim());
-    setNewTitle("");
-    await reload(uid);
+    if (!user?.uid || !newTitle.trim()) return;
+    try {
+      await createBoard(user.uid, newTitle.trim());
+      setNewTitle("");
+      setDialogOpen(false);
+      toast.success("Board created successfully");
+    } catch (error) {
+      console.error("Error creating board:", error);
+      toast.error("Failed to create board");
+    }
   }
 
   async function handleRename(id: string) {
     const t = prompt("New title?");
-    if (!t) return;
-    await renameBoard(id, t);
-    if (uid) await reload(uid);
+    if (!t?.trim()) return;
+    try {
+      await renameBoard(id, t.trim());
+      toast.success("Board renamed successfully");
+    } catch (error) {
+      console.error("Error renaming board:", error);
+      toast.error("Failed to rename board");
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this board?")) return;
-    await deleteBoard(id);
-    if (uid) await reload(uid);
+    try {
+      await deleteBoard(id);
+      toast.success("Board deleted successfully");
+    } catch (error) {
+      console.error("Error deleting board:", error);
+      toast.error("Failed to delete board");
+    }
+  }
+
+  if (error) {
+    toast.error("Error loading boards: " + error);
   }
 
   if (loading) {
@@ -71,7 +78,7 @@ export default function BoardsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Boards</h1>
         <div className="flex gap-2">
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>Create board</Button>
             </DialogTrigger>
@@ -80,8 +87,19 @@ export default function BoardsPage() {
                 <DialogTitle>New board</DialogTitle>
               </DialogHeader>
               <div className="grid gap-3">
-                <Input placeholder="Board title" value={newTitle} onChange={e=>setNewTitle(e.target.value)} />
-                <Button onClick={handleCreate}>Create</Button>
+                <Input 
+                  placeholder="Board title" 
+                  value={newTitle} 
+                  onChange={e => setNewTitle(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && newTitle.trim()) {
+                      handleCreate();
+                    }
+                  }}
+                />
+                <Button onClick={handleCreate} disabled={!newTitle.trim()}>
+                  Create
+                </Button>
               </div>
             </DialogContent>
           </Dialog>

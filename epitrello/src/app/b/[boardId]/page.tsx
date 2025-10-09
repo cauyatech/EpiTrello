@@ -1,11 +1,9 @@
 "use client";
 
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { List, listLists, createList, renameList, deleteList } from "@/lib/lists";
-import { Card, listCards, createCard, updateCard, deleteCard } from "@/lib/cards";
+import { useState } from "react";
+import { createList, renameList, deleteList } from "@/lib/lists";
+import { createCard, updateCard, deleteCard } from "@/lib/cards";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,92 +13,115 @@ import { SortableList } from "@/components/dnd/SortableList";
 import { SortableCard } from "@/components/dnd/SortableCard";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { updateOrderBatch } from "@/lib/order";
+import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeBoard } from "@/hooks/useRealtimeBoard";
+import { useRealtimeLists } from "@/hooks/useRealtimeLists";
+import { useRealtimeCards } from "@/hooks/useRealtimeCards";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { RealtimeIndicator } from "@/components/realtime-indicator";
+import { OnlineUsers } from "@/components/online-users";
 
 export default function BoardPage() {
+  const { user, loading: authLoading } = useAuth("/signin");
   const { boardId } = useParams<{ boardId: string }>();
-  const [lists, setLists] = useState<List[]>([]);
-  const [cards, setCards] = useState<{ [listId: string]: Card[] }>({});
+  const { board, loading: boardLoading, error: boardError } = useRealtimeBoard(boardId as string);
+  const { lists, loading: listsLoading, error: listsError } = useRealtimeLists(boardId as string);
+  const { cardsByList, loading: cardsLoading, error: cardsError } = useRealtimeCards(boardId as string);
+  
   const [newListTitle, setNewListTitle] = useState("");
   const [newCardTitle, setNewCardTitle] = useState<{ [listId: string]: string }>({});
   const [newCardDescription, setNewCardDescription] = useState<{ [listId: string]: string }>({});
-  const [editingCard, setEditingCard] = useState<Card | null>(null);
+  const [editingCard, setEditingCard] = useState<any | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [boardTitle, setBoardTitle] = useState<string | null>(null);
 
+  const loading = authLoading || boardLoading || listsLoading || cardsLoading;
 
-
-useEffect(() => {
-  if (!boardId) return;
-
-  async function fetchBoard() {
-    const snap = await getDoc(doc(db, "boards", boardId as string));
-    if (snap.exists()) {
-      setBoardTitle(snap.data().title);
-    } else {
-      setBoardTitle(null);
-    }
-  }
-
-  fetchBoard();
-  reload(); // continue à charger lists + cards
-}, [boardId]);
-
-  async function reload() {
-    const ls = await listLists(boardId!);
-    setLists(ls);
-
-    const cs: { [listId: string]: Card[] } = {};
-    for (const l of ls) {
-      cs[l.id] = await listCards(boardId!, l.id);
-    }
-    setCards(cs);
+  if (board && user && board.ownerUid !== user.uid) {
+    toast.error("You cannot access this board");
+    return <div>Access denied</div>;
   }
 
   async function handleCreateList() {
-    if (!newListTitle.trim()) return;
-    await createList(boardId!, newListTitle.trim(), lists.length * 100);
-    setNewListTitle("");
-    reload();
+    if (!newListTitle.trim() || !boardId) return;
+    try {
+      const boardIdStr = Array.isArray(boardId) ? boardId[0] : boardId;
+      await createList(boardIdStr, newListTitle.trim(), lists.length * 100);
+      setNewListTitle("");
+      toast.success("List created");
+    } catch (error: any) {
+      console.error("Error creating list:", error);
+      toast.error("Failed to create list: " + (error.message || "Unknown error"));
+    }
   }
 
   async function handleCreateCard(listId: string) {
-  const title = (newCardTitle[listId] || "").trim();
-  if (!title) {
-    toast.error("Card title is required.");
-    return;
+    const title = (newCardTitle[listId] || "").trim();
+    if (!title) {
+      toast.error("Card title is required.");
+      return;
+    }
+
+    const description = (newCardDescription[listId] || "").trim();
+    const order = ((cardsByList[listId]?.length ?? 0) + 1) * 100;
+
+    try {
+      await createCard(boardId as string, listId, title, order, description);
+      setNewCardTitle(prev => ({ ...prev, [listId]: "" }));
+      setNewCardDescription(prev => ({ ...prev, [listId]: "" }));
+      toast.success("Card created");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message ?? "Failed to create card");
+    }
   }
 
-  const description = (newCardDescription[listId] || "").trim();
-  const order = ((cards[listId]?.length ?? 0) + 1);
-
-  try {
-    await createCard(boardId as string, listId, title, order, description);
-    setNewCardTitle(prev => ({ ...prev, [listId]: "" }));
-    setNewCardDescription(prev => ({ ...prev, [listId]: "" }));
-    await reload();
-    toast.success("Card created");
-  } catch (err: any) {
-    console.error(err);
-    toast.error(err?.message ?? "Failed to create card");
+  if (loading) {
+    return (
+      <main className="p-6">
+        <Skeleton className="h-8 w-64 mb-6" />
+        <div className="flex gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="w-64 h-96" />
+          ))}
+        </div>
+      </main>
+    );
   }
-}
 
-return (
+  if (!user) {
+    return null; // ce fera redirect
+  }
+
+  if (boardError || listsError || cardsError) {
+    const error = boardError || listsError || cardsError;
+    toast.error("Error loading board: " + error);
+  }
+
+  return (
     <main className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">{boardTitle ?? "Untitled board"}</h1>
+      <h1 className="text-2xl font-semibold mb-6">{board?.title ?? "Untitled board"}</h1>
       <DndContextBoard
         lists={lists}
-        cardsByList={cards}
+        cardsByList={cardsByList}
         onDragEndCard={async (listId, newCards) => {
-          setCards(prev => ({ ...prev, [listId]: newCards }));
-          await updateOrderBatch("cards", newCards);
+          try {
+            await updateOrderBatch("cards", newCards);
+          } catch (error) {
+            console.error("Error reordering cards:", error);
+            toast.error("Failed to reorder cards");
+          }
         }}
         onDragEndList={async (newLists) => {
-          setLists(newLists);
-          await updateOrderBatch("lists", newLists);}}>
-        <div className="flex gap-4 overflow-x-auto">
+          try {
+            await updateOrderBatch("lists", newLists);
+          } catch (error) {
+            console.error("Error reordering lists:", error);
+            toast.error("Failed to reorder lists");
+          }
+        }}>
+        <div className="flex gap-4 overflow-x-auto pb-4">
           {lists.map(list => (
             <SortableList key={list.id} list={list}>
               <div className="bg-neutral-800 rounded-xl p-3 w-64 flex-shrink-0">
@@ -111,30 +132,40 @@ return (
                       <Button variant="ghost" size="sm" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>⋯</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent   onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem onClick={() => {
+                      <DropdownMenuItem onClick={async () => {
                         const newTitle = prompt("New list title", list.title);
-                        if (newTitle) {
-                          renameList(list.id, newTitle.trim());
-                          reload();}}}>Rename
+                        if (newTitle?.trim()) {
+                          try {
+                            await renameList(list.id, newTitle.trim());
+                            toast.success("List renamed");
+                          } catch (error) {
+                            console.error("Error renaming list:", error);
+                            toast.error("Failed to rename list");}}}}>Rename
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
-                        onClick={() => {
+                        onClick={async () => {
                           if (confirm("Delete this list and all its cards?")) {
-                            deleteList(list.id);
-                            reload();}}}>Delete
+                            try {
+                              await deleteList(list.id);
+                              toast.success("List deleted");
+                            } catch (error) {
+                              console.error("Error deleting list:", error);
+                              toast.error("Failed to delete list");}}}}>Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
 
-                <SortableContext items={cards[list.id]?.map(c => c.id) || []} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-2 mb-2">
-                    {cards[list.id]?.map(c => (
-                      <div key={c.id} onClick={() => {
+                <SortableContext items={cardsByList[list.id]?.map(c => c.id) || []} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2 mb-2 max-h-96 overflow-y-auto">
+                    {cardsByList[list.id]?.map(c => (
+                      <div key={c.id} onClick={(e) => {
+                        e.stopPropagation();
                         setEditingCard(c);
                         setEditTitle(c.title);
-                        setEditDescription(c.description || "");}}>
+                        setEditDescription(c.description || "");
+                      }}>
                         <SortableCard card={c} />
                       </div>))}
                   </div>
@@ -193,23 +224,43 @@ return (
             <textarea className="bg-gray-100 text-black p-2 rounded-md border border-gray-300" rows={4} value={editDescription} 
               onChange={(e) => setEditDescription(e.target.value)}/>
             <div className="flex justify-between">
-              <Button variant="destructive"  onClick={async () => {
-                  if (editingCard && confirm("Delete this card?")) {
+              <Button variant="destructive" onClick={async () => {
+                if (editingCard && confirm("Delete this card?")) {
+                  try {
                     await deleteCard(editingCard.id);
                     setEditingCard(null);
-                    reload();}}}>Delete</Button>
+                    toast.success("Card deleted");
+                  } catch (error) {
+                    console.error("Error deleting card:", error);
+                    toast.error("Failed to delete card");
+                  }
+                }
+              }}>Delete</Button>
               <Button onClick={async () => {
-                  if (editingCard) {
+                if (editingCard && editTitle.trim()) {
+                  try {
                     await updateCard(editingCard.id, {
-                      title: editTitle,
-                      description: editDescription,
+                      title: editTitle.trim(),
+                      description: editDescription.trim(),
                     });
                     setEditingCard(null);
-                    reload();}}}>Save</Button>
+                    toast.success("Card updated");
+                  } catch (error) {
+                    console.error("Error updating card:", error);
+                    toast.error("Failed to update card");
+                  }
+                }
+              }} disabled={!editTitle.trim()}>Save</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Realtime connection indicator */}
+      <RealtimeIndicator boardId={boardId as string} />
+      
+      {/* Online users indicator */}
+      <OnlineUsers boardId={boardId as string} />
     </main>
   );
 }
