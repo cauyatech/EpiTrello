@@ -108,9 +108,9 @@ return (
                   <h2 className="font-medium">{list.title}</h2>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">⋯</Button>
+                      <Button variant="ghost" size="sm" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>⋯</Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent>
+                    <DropdownMenuContent   onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuItem onClick={() => {
                         const newTitle = prompt("New list title", list.title);
                         if (newTitle) {

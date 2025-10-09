@@ -1,22 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  horizontalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import {SortableContext, verticalListSortingStrategy, horizontalListSortingStrategy, arrayMove} from "@dnd-kit/sortable";
 
 export function DndContextBoard({
   lists,
@@ -31,7 +17,7 @@ export function DndContextBoard({
   onDragEndList: (newLists: any[]) => void;
   children: React.ReactNode;
 }) {
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: {distance: 8,},}));
   const [activeId, setActiveId] = useState<string | null>(null);
 
   function handleDragStart(event: DragStartEvent) {
