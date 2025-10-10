@@ -116,7 +116,49 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+    height: 100%;
+    @apply bg-slate-900;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    min-height: 100vh;
+    height: 100%;
+    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #__next {
+    min-height: 100vh;
+    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900;
+  }
+  
+  /* Amélioration du contraste pour les liens */
+  a {
+    @apply text-indigo-400 hover:text-indigo-300 transition-colors;
+  }
+  
+  /* Amélioration des sélecteurs et inputs */
+  input, textarea, select {
+    @apply text-white;
+  }
+  
+  /* Scrollbars personnalisées pour le thème sombre */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-600 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
   }
 }

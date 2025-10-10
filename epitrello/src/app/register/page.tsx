@@ -63,47 +63,72 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="max-w-sm mx-auto pt-24">
-      <h1 className="text-2xl font-semibold mb-4">Create your account</h1>
+    <main className="min-h-screen flex items-center justify-center p-6">
+      <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 w-full max-w-md">
+        <h1 className="text-3xl font-bold text-white mb-8 text-center">Create your account</h1>
 
-      <form onSubmit={onSubmit} className="grid gap-3">
-        <div className="grid gap-1">
-          <Label htmlFor="email">E-mail</Label>
-          <Input id="email" type="email" value={form.email}
-            onChange={(e)=>setForm({...form, email: e.target.value})} />
-          {errors.email && <p className="text-sm text-red-400">{errors.email}</p>}
-        </div>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-gray-300">E-mail</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              value={form.email}
+              onChange={(e)=>setForm({...form, email: e.target.value})}
+              className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+            />
+            {errors.email && <p className="text-sm text-red-400">{errors.email}</p>}
+          </div>
 
-        <div className="grid gap-1">
-          <Label htmlFor="displayName">Pseudonyme (optional)</Label>
-          <Input id="displayName" value={form.displayName}
-            onChange={(e)=>setForm({...form, displayName: e.target.value})} />
-          {errors.displayName && <p className="text-sm text-red-400">{errors.displayName}</p>}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="displayName" className="text-gray-300">Pseudonyme (optional)</Label>
+            <Input 
+              id="displayName" 
+              value={form.displayName}
+              onChange={(e)=>setForm({...form, displayName: e.target.value})}
+              className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+            />
+            {errors.displayName && <p className="text-sm text-red-400">{errors.displayName}</p>}
+          </div>
 
-        <div className="grid gap-1">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" value={form.password}
-            onChange={(e)=>setForm({...form, password: e.target.value})} />
-          {errors.password && <p className="text-sm text-red-400">{errors.password}</p>}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-gray-300">Password</Label>
+            <Input 
+              id="password" 
+              type="password" 
+              value={form.password}
+              onChange={(e)=>setForm({...form, password: e.target.value})}
+              className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+            />
+            {errors.password && <p className="text-sm text-red-400">{errors.password}</p>}
+          </div>
 
-        <div className="grid gap-1">
-          <Label htmlFor="confirm">Confirm password</Label>
-          <Input id="confirm" type="password" value={form.confirm}
-            onChange={(e)=>setForm({...form, confirm: e.target.value})} />
-          {errors.confirm && <p className="text-sm text-red-400">{errors.confirm}</p>}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm" className="text-gray-300">Confirm password</Label>
+            <Input 
+              id="confirm" 
+              type="password" 
+              value={form.confirm}
+              onChange={(e)=>setForm({...form, confirm: e.target.value})}
+              className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+            />
+            {errors.confirm && <p className="text-sm text-red-400">{errors.confirm}</p>}
+          </div>
 
-        <Button type="submit" disabled={loading}>
-          {loading ? "Creating account…" : "Sign up"}
-        </Button>
+          <Button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+          >
+            {loading ? "Creating account…" : "Sign up"}
+          </Button>
 
-        <p className="text-sm text-neutral-400">
-          Already have an account?{" "}
-          <a className="underline" href="/signin">Sign in</a>
-        </p>
-      </form>
+          <p className="text-sm text-gray-400 text-center">
+            Already have an account?{" "}
+            <a className="text-indigo-400 hover:text-indigo-300 underline" href="/signin">Sign in</a>
+          </p>
+        </form>
+      </div>
     </main>
   );
 }
