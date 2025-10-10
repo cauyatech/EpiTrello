@@ -4,12 +4,22 @@ import {
   updateDoc, deleteDoc, doc, orderBy
 } from "firebase/firestore";
 
+export type CardLabel = {
+  id: string;
+  name: string;
+  color: string;
+};
+
 export type Card = {
   id: string;
   boardId: string;
   listId: string;
   title: string;
   description?: string;
+  labels?: CardLabel[];
+  dueDate?: Date;
+  completed?: boolean;
+  assignedUsers?: string[];
   order: number;
   createdAt?: any;
   updatedAt?: any;
@@ -26,13 +36,17 @@ export async function listCards(boardId: string, listId: string): Promise<Card[]
   return snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
 }
 
-export async function createCard(boardId: string, listId: string, title: string, order: number, description = "") {
+export async function createCard(boardId: string, listId: string, title: string, order: number, description = "", dueDate?: Date) {
   const ref = collection(db, "cards");
-  await addDoc(ref, {
+  const cardData: any = {
     boardId, listId, title, description, order,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+  if (dueDate) {
+    cardData.dueDate = dueDate;
+  }
+  await addDoc(ref, cardData);
 }
 
 export async function updateCard(id: string, data: Partial<Card>) {

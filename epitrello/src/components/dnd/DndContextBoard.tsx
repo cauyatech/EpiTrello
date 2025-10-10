@@ -106,14 +106,14 @@ export function DndContextBoard({
       </SortableContext>
       <DragOverlay>
         {activeCard ? (
-          <div className="bg-neutral-700 rounded-md p-2 text-sm opacity-90 rotate-3 transform scale-105 shadow-lg">
-            <p className="font-medium">{activeCard.title}</p>
+          <div className="bg-slate-700 border border-slate-600 rounded-md p-2 text-sm opacity-90 rotate-3 transform scale-105 shadow-lg">
+            <p className="font-medium text-white">{activeCard.title}</p>
             {activeCard.description && (
-              <p className="text-xs text-neutral-300 line-clamp-2">{activeCard.description}</p>)}
+              <p className="text-xs text-gray-300 line-clamp-2">{activeCard.description}</p>)}
           </div>
         ) : activeList ? (
-          <div className="bg-neutral-800 rounded-xl p-3 w-64 opacity-90 shadow-lg">
-            <h2 className="font-medium">{activeList.title}</h2>
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-3 w-64 opacity-90 shadow-lg">
+            <h2 className="font-medium text-white">{activeList.title}</h2>
           </div>
         ) : null}
       </DragOverlay>

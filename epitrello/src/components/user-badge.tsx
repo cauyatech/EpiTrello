@@ -26,7 +26,7 @@ export default function UserBadge() {
 
   if (!displayName) return null;
   return (
-    <div className="fixed bottom-3 left-3 text-sm text-neutral-400">
+    <div className="fixed bottom-3 left-3 text-sm text-gray-400 bg-slate-800/80 px-3 py-2 rounded-lg border border-slate-700 backdrop-blur-sm">
       🧍 {displayName}
     </div>
   );

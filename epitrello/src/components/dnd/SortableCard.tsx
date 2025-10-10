@@ -3,6 +3,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/lib/cards";
+import { CardLabels } from "@/components/card-labels";
+import { CardDueDate } from "@/components/card-due-date";
 
 export function SortableCard({ card }: { card: Card }) {
   const { 
@@ -32,12 +34,29 @@ export function SortableCard({ card }: { card: Card }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-neutral-700 rounded-md p-2 text-sm cursor-grab hover:bg-neutral-600 active:cursor-grabbing"
+      className="bg-slate-700 border border-slate-600 rounded-md p-3 text-sm cursor-grab hover:bg-slate-600 active:cursor-grabbing transition-colors"
     >
-      <p className="font-medium">{card.title}</p>
-      {card.description && (
-        <p className="text-xs text-neutral-300 line-clamp-2">{card.description}</p>
+      {card.labels && card.labels.length > 0 && (
+        <CardLabels labels={card.labels} compact={true} />
       )}
+      <p className="font-medium text-white">{card.title}</p>
+      {card.description && (
+        <p className="text-xs text-gray-300 line-clamp-2 mt-1">{card.description}</p>
+      )}
+      <div className="flex items-center justify-between mt-2">
+        {card.dueDate && (
+          <CardDueDate 
+            dueDate={card.dueDate} 
+            completed={card.completed} 
+            compact={true} 
+          />
+        )}
+        {card.completed && !card.dueDate && (
+          <div className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border border-green-500/30">
+            ✓ Done
+          </div>
+        )}
+      </div>
     </div>
   );
 }
